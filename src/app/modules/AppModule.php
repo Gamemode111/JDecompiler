@@ -46,6 +46,11 @@ class AppModule extends AbstractModule
                     $files = $zip->statAll();
                     $count = count($files);
                     $unpacked = 0;
+
+                    // Add arrays for bundles, classes, and styles
+                    $bundles = [];
+                    $classes = [];
+                    $styles = [];
    
                     print "Unpacking ".fs::name($file)."...\n";
   
