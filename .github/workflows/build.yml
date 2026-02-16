@@ -1,0 +1,48 @@
+name: Build JDecompiler
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Java 8
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '8'
+        
+    - name: Download DevelNext
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/jphp-group/develnext/releases/download/16.7.0/DevelNext-16.7.0-installer.exe" -OutFile "develnext-installer.exe"
+        
+    - name: Install DevelNext (silent)
+      run: |
+        Start-Process -Wait -FilePath "develnext-installer.exe" -ArgumentList "/S", "/D=C:\DevelNext"
+        
+    - name: Build project
+      run: |
+        & "C:\DevelNext\DevelNext.exe" build JDecompiler.dnproject --output JDecompiler.jar
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: JDecompiler
+        path: JDecompiler.jar
+        
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: JDecompiler.jar
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
